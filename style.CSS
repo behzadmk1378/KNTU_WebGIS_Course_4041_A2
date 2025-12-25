@@ -80,3 +80,211 @@ main {
     height: 100%;
     position: relative;
 }
+
+/* ============================================
+   SEARCH BAR SECTION
+   Search input and button positioned over map
+   ============================================ */
+
+/* Container for search bar - positioned absolutely over the map */
+.search-container {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%); /* Center horizontally */
+    z-index: 1000; /* Ensure it appears above map */
+    display: flex;
+    gap: 10px; /* Space between input and button */
+    background: white;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    max-width: 90%; /* Responsive on mobile */
+    width: 500px;
+}
+
+/* Search input field styling */
+.search-input {
+    flex: 1; /* Takes remaining space */
+    padding: 12px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+/* Input focus state - highlight when user clicks */
+.search-input:focus {
+    border-color: #667eea;
+}
+
+/* Search button styling */
+.search-button {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    white-space: nowrap; /* Prevent button text wrapping */
+}
+
+/* Button hover effect - lift slightly */
+.search-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* Button active state - press down */
+.search-button:active {
+    transform: translateY(0);
+}
+
+/* Button disabled state */
+.search-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ============================================
+   WEATHER PANEL SECTION
+   Weather information display overlay
+   ============================================ */
+
+/* Weather panel container - positioned in bottom-right corner */
+.weather-panel {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 320px;
+    max-height: 400px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    overflow: hidden;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* Hidden state for weather panel */
+.weather-panel.hidden {
+    transform: translateY(20px);
+    opacity: 0;
+    pointer-events: none; /* Prevent interaction when hidden */
+}
+
+/* Weather panel title */
+.weather-title {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px 20px;
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/* Weather content container */
+.weather-content {
+    padding: 20px;
+    max-height: 320px;
+    overflow-y: auto; /* Scrollable if content is long */
+}
+
+/* Close button for weather panel */
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 28px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s ease;
+    z-index: 10;
+}
+
+/* Close button hover effect */
+.close-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Weather data item styling */
+.weather-item {
+    margin-bottom: 12px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Weather item label */
+.weather-label {
+    font-weight: 600;
+    color: #555;
+}
+
+/* Weather item value */
+.weather-value {
+    color: #333;
+    font-weight: 500;
+}
+
+/* Loading spinner for weather panel */
+.weather-loading {
+    text-align: center;
+    padding: 20px;
+    color: #667eea;
+}
+
+/* Error message styling */
+.weather-error {
+    color: #ff4444;
+    text-align: center;
+    padding: 15px;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   Mobile-friendly adjustments
+   ============================================ */
+
+/* Mobile devices (phones) */
+@media (max-width: 768px) {
+    /* Make search bar narrower on mobile */
+    .search-container {
+        width: 90%;
+        max-width: 100%;
+        flex-direction: column;
+    }
+    
+    /* Make weather panel full width on mobile */
+    .weather-panel {
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        width: auto;
+    }
+    
+    /* Smaller header text on mobile */
+    header h1 {
+        font-size: 22px;
+    }
+    
+    header p {
+        font-size: 12px;
+    }
+}

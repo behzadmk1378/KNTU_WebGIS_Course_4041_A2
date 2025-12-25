@@ -28,8 +28,44 @@
         
         <!-- Main content area where map will be displayed -->
         <main>
+            
+            <!-- Search bar overlay positioned on top of the map -->
+            <div class="search-container">
+                <!-- Search input field for entering location queries -->
+                <input 
+                    type="text" 
+                    id="search-input" 
+                    class="search-input" 
+                    placeholder="Search for a location (e.g., Tehran, Paris, New York)..."
+                    aria-label="Search location"
+                >
+                
+                <!-- Search button to trigger the geocoding search -->
+                <button 
+                    id="search-button" 
+                    class="search-button"
+                    aria-label="Search"
+                >
+                    🔍 Search
+                </button>
+            </div>
+            
             <!-- Map container - OpenLayers will render the map inside this div -->
             <div id="map"></div>
+            
+            <!-- Weather information panel - initially hidden -->
+            <div id="weather-panel" class="weather-panel hidden">
+                <!-- Close button for weather panel -->
+                <button class="close-button" id="close-weather" aria-label="Close weather panel">&times;</button>
+                
+                <!-- Weather panel title -->
+                <h3 class="weather-title">Weather Information</h3>
+                
+                <!-- Weather content container -->
+                <div id="weather-content" class="weather-content">
+                    <!-- Weather data will be dynamically inserted here -->
+                </div>
+            </div>
         </main>
         
     </div>
