@@ -245,7 +245,8 @@ async function performSearch() {
             };
         } else {
             // Nominatim API uses 'q' parameter and format
-            url = `${GEOCODING_API_URL}?format=json&q=${encodeURIComponent(query)}&limit=1`;
+            // Get up to 5 results for user to choose from
+            url = `${GEOCODING_API_URL}?format=json&q=${encodeURIComponent(query)}&limit=5`;
         }
         
         console.log('Full request URL:', url);
@@ -268,53 +269,25 @@ async function performSearch() {
         
         console.log('API Response data:', data);
         
-        // Extract coordinates based on API type
-        let lon, lat, displayName;
-        
+        // Check if we got any results
         if (isNeshanAPI) {
-            // Neshan API response format
             if (!data.items || data.items.length === 0) {
                 console.warn('No results found in Neshan API response');
                 alert('Location not found. Please try a different search term.');
                 return;
             }
-            
             console.log('Number of Neshan results:', data.items.length);
-            const result = data.items[0];
-            lon = result.location.x;
-            lat = result.location.y;
-            displayName = result.title;
-            const address = result.address || '';
-            displayName = address ? `${displayName}, ${address}` : displayName;
-            
         } else {
-            // Nominatim API response format
             if (!data || data.length === 0) {
                 console.warn('No results found in Nominatim API response');
                 alert('Location not found. Please try a different search term.');
                 return;
             }
-            
             console.log('Number of Nominatim results:', data.length);
-            const result = data[0];
-            lon = parseFloat(result.lon);
-            lat = parseFloat(result.lat);
-            displayName = result.display_name;
         }
         
-        console.log('Number of results found');
-        
-        // Extract coordinates from the result
-        console.log(`Found: ${displayName} at [${lon}, ${lat}]`);
-        
-        // Add marker to the map
-        addMarker([lon, lat], displayName);
-        
-        // Animate the map to zoom to the found location
-        animateToLocation([lon, lat]);
-        
-        // Show success feedback
-        searchInput.value = displayName;
+        // Display results for user to choose
+        displaySearchResults(data, isNeshanAPI);
         
     } catch (error) {
         // Handle any errors that occurred during fetch or processing
@@ -349,6 +322,99 @@ function animateToLocation(coordinates) {
     });
     
     console.log('Animated to location');
+}
+
+/**
+ * Display search results for user to choose from
+ * @param {Array|Object} data - Search results from API
+ * @param {boolean} isNeshanAPI - Whether using Neshan API
+ */
+function displaySearchResults(data, isNeshanAPI) {
+    const resultsContainer = document.getElementById('search-results');
+    
+    // Clear previous results
+    resultsContainer.innerHTML = '';
+    
+    // Get results array based on API type
+    const results = isNeshanAPI ? data.items : data;
+    
+    // If only one result, select it automatically
+    if (results.length === 1) {
+        selectSearchResult(results[0], isNeshanAPI);
+        return;
+    }
+    
+    // Create result items
+    results.forEach((result, index) => {
+        const resultItem = document.createElement('div');
+        resultItem.className = 'search-result-item';
+        
+        let title, address;
+        
+        if (isNeshanAPI) {
+            title = result.title;
+            address = result.address || 'No address available';
+        } else {
+            // For Nominatim, split display_name into title and address
+            const parts = result.display_name.split(',');
+            title = parts[0];
+            address = parts.slice(1).join(',').trim();
+        }
+        
+        resultItem.innerHTML = `
+            <div class="result-title">${title}</div>
+            <div class="result-address">${address}</div>
+        `;
+        
+        // Add click handler
+        resultItem.addEventListener('click', () => {
+            selectSearchResult(result, isNeshanAPI);
+        });
+        
+        resultsContainer.appendChild(resultItem);
+    });
+    
+    // Show the results container
+    resultsContainer.classList.remove('hidden');
+    
+    console.log(`Displayed ${results.length} search results`);
+}
+
+/**
+ * Handle selection of a search result
+ * @param {Object} result - Selected result object
+ * @param {boolean} isNeshanAPI - Whether using Neshan API
+ */
+function selectSearchResult(result, isNeshanAPI) {
+    let lon, lat, displayName;
+    
+    if (isNeshanAPI) {
+        lon = result.location.x;
+        lat = result.location.y;
+        displayName = result.title;
+        const address = result.address || '';
+        displayName = address ? `${displayName}, ${address}` : displayName;
+    } else {
+        lon = parseFloat(result.lon);
+        lat = parseFloat(result.lat);
+        displayName = result.display_name;
+    }
+    
+    console.log(`Selected: ${displayName} at [${lon}, ${lat}]`);
+    
+    // Hide results
+    const resultsContainer = document.getElementById('search-results');
+    resultsContainer.classList.add('hidden');
+    
+    // Update search input
+    const searchInput = document.getElementById('search-input');
+    searchInput.value = displayName;
+    
+    // Add marker to the map
+    addMarker([lon, lat], displayName);
+    
+    // Animate the map to zoom to the found location
+    animateToLocation([lon, lat]);
 }
 
 /* ============================================
