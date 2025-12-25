@@ -292,4 +292,217 @@ function animateToLocation(coordinates) {
     console.log('Animated to location');
 }
 
+/* ============================================
+   WEATHER FUNCTIONALITY
+   Fetch and display weather data on map click
+   ============================================ */
+
+/**
+ * Set up event listeners for weather functionality
+ */
+function setupWeatherListeners() {
+    // Add click event listener to the map
+    // When user clicks anywhere on the map, fetch weather for that location
+    map.on('singleclick', function(event) {
+        // Get the clicked coordinates
+        const clickedCoord = event.coordinate;
+        
+        // Convert from Web Mercator (EPSG:3857) to longitude/latitude (EPSG:4326)
+        const lonLat = ol.proj.toLonLat(clickedCoord);
+        
+        // Extract longitude and latitude
+        const lon = lonLat[0];
+        const lat = lonLat[1];
+        
+        console.log(`Map clicked at: Lon ${lon}, Lat ${lat}`);
+        
+        // Fetch weather data for the clicked location
+        fetchWeatherData(lat, lon);
+    });
+    
+    // Set up close button for weather panel
+    const closeButton = document.getElementById('close-weather');
+    closeButton.addEventListener('click', hideWeatherPanel);
+    
+    console.log('Weather listeners initialized');
+}
+
+/**
+ * Fetch weather data from the weather API
+ * @param {number} lat - Latitude
+ * @param {number} lon - Longitude
+ */
+async function fetchWeatherData(lat, lon) {
+    const weatherPanel = document.getElementById('weather-panel');
+    const weatherContent = document.getElementById('weather-content');
+    
+    // Show the weather panel
+    weatherPanel.classList.remove('hidden');
+    
+    // Show loading state
+    weatherContent.innerHTML = '<div class="weather-loading">⏳ Loading weather data...</div>';
+    
+    try {
+        // Build API URL with parameters
+        // Open-Meteo provides current weather data for free
+        // Parameters:
+        // - latitude, longitude: Location coordinates
+        // - current_weather=true: Request current weather conditions
+        // - temperature_unit=celsius: Use Celsius for temperature
+        const url = `${WEATHER_API_URL}?latitude=${lat}&longitude=${lon}&current_weather=true&temperature_unit=celsius`;
+        
+        console.log('Fetching weather data...');
+        
+        // Fetch data from weather API
+        const response = await fetch(url);
+        
+        // Check if request was successful
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // Parse JSON response
+        const data = await response.json();
+        
+        // Extract weather information
+        const currentWeather = data.current_weather;
+        
+        // Display weather data
+        displayWeatherData({
+            temperature: currentWeather.temperature,
+            windSpeed: currentWeather.windspeed,
+            windDirection: currentWeather.winddirection,
+            weatherCode: currentWeather.weathercode,
+            time: currentWeather.time,
+            latitude: lat.toFixed(4),
+            longitude: lon.toFixed(4)
+        });
+        
+        console.log('Weather data loaded successfully');
+        
+    } catch (error) {
+        // Handle errors
+        console.error('Error fetching weather data:', error);
+        weatherContent.innerHTML = '<div class="weather-error">❌ Failed to load weather data. Please try again.</div>';
+    }
+}
+
+/**
+ * Display weather data in the weather panel
+ * @param {Object} weatherData - Weather information to display
+ */
+function displayWeatherData(weatherData) {
+    const weatherContent = document.getElementById('weather-content');
+    
+    // Convert weather code to human-readable description
+    const weatherDescription = getWeatherDescription(weatherData.weatherCode);
+    
+    // Convert wind direction degrees to compass direction
+    const windDirectionText = getWindDirection(weatherData.windDirection);
+    
+    // Build HTML for weather display
+    const html = `
+        <div class="weather-item">
+            <span class="weather-label">📍 Location:</span>
+            <span class="weather-value">${weatherData.latitude}, ${weatherData.longitude}</span>
+        </div>
+        <div class="weather-item">
+            <span class="weather-label">🌡️ Temperature:</span>
+            <span class="weather-value">${weatherData.temperature}°C</span>
+        </div>
+        <div class="weather-item">
+            <span class="weather-label">☁️ Conditions:</span>
+            <span class="weather-value">${weatherDescription}</span>
+        </div>
+        <div class="weather-item">
+            <span class="weather-label">💨 Wind Speed:</span>
+            <span class="weather-value">${weatherData.windSpeed} km/h</span>
+        </div>
+        <div class="weather-item">
+            <span class="weather-label">🧭 Wind Direction:</span>
+            <span class="weather-value">${windDirectionText} (${weatherData.windDirection}°)</span>
+        </div>
+        <div class="weather-item">
+            <span class="weather-label">🕐 Updated:</span>
+            <span class="weather-value">${formatDateTime(weatherData.time)}</span>
+        </div>
+    `;
+    
+    // Insert HTML into weather content container
+    weatherContent.innerHTML = html;
+}
+
+/**
+ * Hide the weather panel
+ */
+function hideWeatherPanel() {
+    const weatherPanel = document.getElementById('weather-panel');
+    weatherPanel.classList.add('hidden');
+}
+
+/**
+ * Convert WMO weather code to human-readable description
+ * @param {number} code - WMO weather code
+ * @returns {string} Weather description
+ */
+function getWeatherDescription(code) {
+    // WMO Weather interpretation codes
+    const weatherCodes = {
+        0: 'Clear sky',
+        1: 'Mainly clear',
+        2: 'Partly cloudy',
+        3: 'Overcast',
+        45: 'Foggy',
+        48: 'Depositing rime fog',
+        51: 'Light drizzle',
+        53: 'Moderate drizzle',
+        55: 'Dense drizzle',
+        61: 'Slight rain',
+        63: 'Moderate rain',
+        65: 'Heavy rain',
+        71: 'Slight snow',
+        73: 'Moderate snow',
+        75: 'Heavy snow',
+        77: 'Snow grains',
+        80: 'Slight rain showers',
+        81: 'Moderate rain showers',
+        82: 'Violent rain showers',
+        85: 'Slight snow showers',
+        86: 'Heavy snow showers',
+        95: 'Thunderstorm',
+        96: 'Thunderstorm with slight hail',
+        99: 'Thunderstorm with heavy hail'
+    };
+    
+    return weatherCodes[code] || 'Unknown';
+}
+
+/**
+ * Convert wind direction in degrees to compass direction
+ * @param {number} degrees - Wind direction in degrees (0-360)
+ * @returns {string} Compass direction (N, NE, E, etc.)
+ */
+function getWindDirection(degrees) {
+    const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    // Calculate which direction slice the degrees falls into
+    const index = Math.round(degrees / 45) % 8;
+    return directions[index];
+}
+
+/**
+ * Format ISO datetime string to readable format
+ * @param {string} isoString - ISO 8601 datetime string
+ * @returns {string} Formatted datetime
+ */
+function formatDateTime(isoString) {
+    const date = new Date(isoString);
+    return date.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+
 
