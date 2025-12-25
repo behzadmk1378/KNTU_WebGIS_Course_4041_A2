@@ -18,6 +18,12 @@ let markerLayer; // Vector layer for displaying search result markers
 // Nominatim doesn't require an API key but has usage limits
 const GEOCODING_API_URL = 'https://nominatim.openstreetmap.org/search';
 
+// Weather API Configuration
+// TODO: Replace 'YOUR_API_KEY_HERE' with your actual API key from Open-Meteo or OpenWeatherMap
+// For this example, we'll use Open-Meteo which is free and doesn't require an API key
+// Open-Meteo provides basic weather data without registration
+const WEATHER_API_URL = 'https://api.open-meteo.com/v1/forecast';
+
 /* ============================================
    MAP INITIALIZATION
    Creates and configures the OpenLayers map
@@ -31,6 +37,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Set up event listeners for search functionality
     setupSearchListeners();
+    
+    // Set up event listeners for weather functionality
+    setupWeatherListeners();
     
 });
 
