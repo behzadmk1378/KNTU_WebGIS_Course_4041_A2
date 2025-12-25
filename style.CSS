@@ -99,7 +99,6 @@ main {
     padding: 10px;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-    max-width: 90%; /* Responsive on mobile */
     width: 500px;
 }
 
@@ -255,36 +254,4 @@ main {
     color: #ff4444;
     text-align: center;
     padding: 15px;
-}
-
-/* ============================================
-   RESPONSIVE DESIGN
-   Mobile-friendly adjustments
-   ============================================ */
-
-/* Mobile devices (phones) */
-@media (max-width: 768px) {
-    /* Make search bar narrower on mobile */
-    .search-container {
-        width: 90%;
-        max-width: 100%;
-        flex-direction: column;
-    }
-    
-    /* Make weather panel full width on mobile */
-    .weather-panel {
-        left: 10px;
-        right: 10px;
-        bottom: 10px;
-        width: auto;
-    }
-    
-    /* Smaller header text on mobile */
-    header h1 {
-        font-size: 22px;
-    }
-    
-    header p {
-        font-size: 12px;
-    }
 }

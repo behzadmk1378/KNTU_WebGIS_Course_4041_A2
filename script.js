@@ -67,7 +67,7 @@ function initializeMap() {
     
     // Create a map instance
     // The Map is the core component of OpenLayers that brings everything together
-    const map = new ol.Map({
+    map = new ol.Map({
         
         // Target specifies which HTML element will contain the map
         // It should match the id of our map container div in index.html
@@ -107,10 +107,6 @@ function initializeMap() {
             maxZoom: 19  // Prevent zooming in beyond tile detail
         })
     });
-    
-    // Store map reference globally so other functions can access it
-    // This allows us to use the map in search and weather functions later
-    window.map = map;
     
     console.log('Map initialized successfully');
 }
@@ -167,6 +163,24 @@ function setupSearchListeners() {
     const searchInput = document.getElementById('search-input');
     const searchButton = document.getElementById('search-button');
     
+    // Check if elements exist
+    if (!searchInput || !searchButton) {
+        console.error('Search elements not found!');
+        return;
+    }
+    
+    // Check if API configuration is loaded
+    if (typeof GEOCODING_API_URL === 'undefined' || typeof GEOCODING_API_KEY === 'undefined') {
+        console.error('API configuration not loaded! Make sure config.js is included before script.js');
+        alert('Error: API configuration not found. Please check console for details.');
+        return;
+    }
+    
+    console.log('API Config loaded:', { 
+        url: GEOCODING_API_URL, 
+        hasKey: GEOCODING_API_KEY ? 'Yes' : 'No' 
+    });
+    
     // Add click event listener to search button
     searchButton.addEventListener('click', performSearch);
     
@@ -178,7 +192,7 @@ function setupSearchListeners() {
         }
     });
     
-    console.log('Search listeners initialized');
+    console.log('Search listeners initialized successfully');
 }
 
 /**
@@ -186,12 +200,16 @@ function setupSearchListeners() {
  * This is an async function because we need to wait for API responses
  */
 async function performSearch() {
+    console.log('performSearch called');
+    
     // Get the search input element
     const searchInput = document.getElementById('search-input');
     const searchButton = document.getElementById('search-button');
     
     // Get the search query from input and remove extra spaces
     const query = searchInput.value.trim();
+    
+    console.log('Search query:', query);
     
     // Validate that user entered something
     if (!query) {
@@ -204,61 +222,99 @@ async function performSearch() {
     searchButton.textContent = '🔍 Searching...';
     
     try {
-        // Make API request using Fetch API with Neshan
+        // Make API request using Fetch API
         // await pauses execution until the fetch completes
         console.log(`Searching for: ${query}`);
+        console.log('API URL:', GEOCODING_API_URL);
+        console.log('API Key:', GEOCODING_API_KEY ? 'Present' : 'Not needed');
+        
+        // Determine which API we're using
+        const isNeshanAPI = GEOCODING_API_URL.includes('neshan');
         
         // Build the API URL with query parameters
-        // Neshan API uses 'term' parameter for search query
-        const url = `${GEOCODING_API_URL}?term=${encodeURIComponent(query)}`;
+        let url;
+        let fetchOptions = { method: 'GET' };
         
-        // Fetch data from Neshan API
-        // Neshan requires API key in the headers
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Api-Key': GEOCODING_API_KEY, // Neshan requires API key in header
+        if (isNeshanAPI) {
+            // Neshan API uses 'term' parameter
+            url = `${GEOCODING_API_URL}?term=${encodeURIComponent(query)}`;
+            // Neshan requires API key in headers
+            fetchOptions.headers = {
+                'Api-Key': GEOCODING_API_KEY,
                 'Content-Type': 'application/json'
-            }
-        });
+            };
+        } else {
+            // Nominatim API uses 'q' parameter and format
+            url = `${GEOCODING_API_URL}?format=json&q=${encodeURIComponent(query)}&limit=1`;
+        }
+        
+        console.log('Full request URL:', url);
+        
+        // Fetch data from API
+        const response = await fetch(url, fetchOptions);
+        
+        console.log('Response status:', response.status);
+        console.log('Response ok:', response.ok);
         
         // Check if the HTTP request was successful
         if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Response error:', errorText);
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         // Parse the JSON response
-        // await pauses until JSON parsing is complete
         const data = await response.json();
         
-        // Check if we got any results
-        // Neshan returns an items array with search results
-        if (!data.items || data.items.length === 0) {
-            alert('Location not found. Please try a different search term.');
-            return;
+        console.log('API Response data:', data);
+        
+        // Extract coordinates based on API type
+        let lon, lat, displayName;
+        
+        if (isNeshanAPI) {
+            // Neshan API response format
+            if (!data.items || data.items.length === 0) {
+                console.warn('No results found in Neshan API response');
+                alert('Location not found. Please try a different search term.');
+                return;
+            }
+            
+            console.log('Number of Neshan results:', data.items.length);
+            const result = data.items[0];
+            lon = result.location.x;
+            lat = result.location.y;
+            displayName = result.title;
+            const address = result.address || '';
+            displayName = address ? `${displayName}, ${address}` : displayName;
+            
+        } else {
+            // Nominatim API response format
+            if (!data || data.length === 0) {
+                console.warn('No results found in Nominatim API response');
+                alert('Location not found. Please try a different search term.');
+                return;
+            }
+            
+            console.log('Number of Nominatim results:', data.length);
+            const result = data[0];
+            lon = parseFloat(result.lon);
+            lat = parseFloat(result.lat);
+            displayName = result.display_name;
         }
         
-        // Extract coordinates from the first result
-        // Neshan API returns location in different format
-        const result = data.items[0];
-        const lon = result.location.x; // Neshan uses x for longitude
-        const lat = result.location.y; // Neshan uses y for latitude
-        const displayName = result.title; // Use title as display name
-        const address = result.address || ''; // Additional address information
+        console.log('Number of results found');
         
-        // Combine title and address for better display
-        const fullName = address ? `${displayName}, ${address}` : displayName;
-        
-        console.log(`Found: ${fullName} at [${lon}, ${lat}]`);
+        // Extract coordinates from the result
+        console.log(`Found: ${displayName} at [${lon}, ${lat}]`);
         
         // Add marker to the map
-        addMarker([lon, lat], fullName);
+        addMarker([lon, lat], displayName);
         
         // Animate the map to zoom to the found location
         animateToLocation([lon, lat]);
         
         // Show success feedback
-        searchInput.value = fullName;
+        searchInput.value = displayName;
         
     } catch (error) {
         // Handle any errors that occurred during fetch or processing
