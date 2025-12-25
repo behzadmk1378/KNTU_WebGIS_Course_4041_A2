@@ -4,9 +4,11 @@ let markerLayer;
 let autocompleteTimeout;
 
 // API Configuration (fallback if config.js not loaded)
-const GEOCODING_API_KEY = typeof GEOCODING_API_KEY !== 'undefined' ? GEOCODING_API_KEY : 'YOUR_API_KEY_HERE';
-const GEOCODING_API_URL = typeof GEOCODING_API_URL !== 'undefined' ? GEOCODING_API_URL : 'https://nominatim.openstreetmap.org/search';
-const WEATHER_API_URL = typeof WEATHER_API_URL !== 'undefined' ? WEATHER_API_URL : 'https://api.open-meteo.com/v1/forecast';
+if (typeof GEOCODING_API_KEY === 'undefined') {
+    var GEOCODING_API_KEY = 'YOUR_API_KEY_HERE';
+    var GEOCODING_API_URL = 'https://nominatim.openstreetmap.org/search';
+    var WEATHER_API_URL = 'https://api.open-meteo.com/v1/forecast';
+}
 
 // Wait for page to load
 document.addEventListener('DOMContentLoaded', function() {
