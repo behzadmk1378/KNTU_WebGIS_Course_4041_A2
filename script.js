@@ -204,18 +204,23 @@ async function performSearch() {
     searchButton.textContent = '🔍 Searching...';
     
     try {
-        // Make API request using Fetch API
+        // Make API request using Fetch API with Neshan
         // await pauses execution until the fetch completes
         console.log(`Searching for: ${query}`);
         
         // Build the API URL with query parameters
-        // format=json: Request JSON response
-        // q=query: The search term
-        // limit=1: Only return the best match
-        const url = `${GEOCODING_API_URL}?format=json&q=${encodeURIComponent(query)}&limit=1`;
+        // Neshan API uses 'term' parameter for search query
+        const url = `${GEOCODING_API_URL}?term=${encodeURIComponent(query)}`;
         
-        // Fetch data from the API
-        const response = await fetch(url);
+        // Fetch data from Neshan API
+        // Neshan requires API key in the headers
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Api-Key': GEOCODING_API_KEY, // Neshan requires API key in header
+                'Content-Type': 'application/json'
+            }
+        });
         
         // Check if the HTTP request was successful
         if (!response.ok) {
@@ -227,32 +232,38 @@ async function performSearch() {
         const data = await response.json();
         
         // Check if we got any results
-        if (data.length === 0) {
+        // Neshan returns an items array with search results
+        if (!data.items || data.items.length === 0) {
             alert('Location not found. Please try a different search term.');
             return;
         }
         
         // Extract coordinates from the first result
-        const result = data[0];
-        const lon = parseFloat(result.lon);
-        const lat = parseFloat(result.lat);
-        const displayName = result.display_name;
+        // Neshan API returns location in different format
+        const result = data.items[0];
+        const lon = result.location.x; // Neshan uses x for longitude
+        const lat = result.location.y; // Neshan uses y for latitude
+        const displayName = result.title; // Use title as display name
+        const address = result.address || ''; // Additional address information
         
-        console.log(`Found: ${displayName} at [${lon}, ${lat}]`);
+        // Combine title and address for better display
+        const fullName = address ? `${displayName}, ${address}` : displayName;
+        
+        console.log(`Found: ${fullName} at [${lon}, ${lat}]`);
         
         // Add marker to the map
-        addMarker([lon, lat], displayName);
+        addMarker([lon, lat], fullName);
         
         // Animate the map to zoom to the found location
         animateToLocation([lon, lat]);
         
         // Show success feedback
-        searchInput.value = displayName;
+        searchInput.value = fullName;
         
     } catch (error) {
         // Handle any errors that occurred during fetch or processing
         console.error('Error during geocoding search:', error);
-        alert('An error occurred while searching. Please try again.');
+        alert('An error occurred while searching. Please check your API key and try again.');
         
     } finally {
         // Re-enable button and restore original text

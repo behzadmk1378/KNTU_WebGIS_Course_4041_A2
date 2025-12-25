@@ -38,7 +38,7 @@ An interactive web mapping application built with OpenLayers that provides geoco
 - **CSS3**: Custom styling with gradients and animations
 - **Vanilla JavaScript**: No frameworks required
 - **Fetch API**: Modern asynchronous HTTP requests
-- **Nominatim API**: Free geocoding service by OpenStreetMap
+- **Neshan Maps API**: Iranian-focused geocoding service with Persian support
 - **Open-Meteo API**: Free weather data service
 
 ## 🗺️ OpenLayers Features
@@ -180,8 +180,13 @@ Calculating for 100,000 requests per month (~3,300/day):
    # Copy the example configuration file
    copy config.example.js config.js
    
-   # The config.js file is already set up for free APIs (no keys needed)
-   # If you want to use different APIs, edit config.js and add your keys
+   # Edit config.js and add your Neshan API key
+   # Get your free API key from: https://platform.neshan.org/
+   ```
+   
+   **Required:** Add your Neshan API key to `config.js`:
+   ```javascript
+   const GEOCODING_API_KEY = 'your_neshan_api_key_here';
    ```
    
    **Important:** `config.js` is excluded from Git via `.gitignore` to protect your API keys.
@@ -203,13 +208,19 @@ Calculating for 100,000 requests per month (~3,300/day):
 4. **Access the application**
    - Open your browser and navigate to `http://localhost:8000`
 
-### No API Keys Needed!
+### API Keys Setup
 
-This project uses free services that don't require API keys:
-- **Nominatim**: No key required (please respect rate limits)
-- **Open-Meteo**: No key required
+**Geocoding API - Neshan Maps** 🇮🇷
+- Get your free API key from [Neshan Platform](https://platform.neshan.org/)
+- Free tier: 50,000 requests per month
+- Excellent for Iranian locations and Persian addresses
+- Add your key to `config.js`
 
-If you want to use APIs that require keys (Google Maps, OpenWeatherMap, etc.), simply edit `config.js` and add your keys there.
+**Weather API - Open-Meteo** ✅
+- No API key required
+- Completely free with generous limits
+
+If you want to use alternative APIs (Google Maps, OpenWeatherMap, etc.), simply edit `config.js` and add your keys there.
 
 ## 📖 Usage
 
@@ -255,14 +266,34 @@ KNTU_WebGIS_Course_4041_A2/
 
 ### Current Configuration
 
-The application is configured with free, no-API-key services:
+The application uses Neshan Maps for geocoding and Open-Meteo for weather:
 
 ```javascript
-// Geocoding API (Nominatim)
-const GEOCODING_API_URL = 'https://nominatim.openstreetmap.org/search';
+// Neshan Geocoding API (Requires API Key)
+const GEOCODING_API_KEY = 'your_api_key_here';
+const GEOCODING_API_URL = 'https://api.neshan.org/v1/search';
 
-// Weather API (Open-Meteo)
+// Weather API (Open-Meteo - No key required)
 const WEATHER_API_URL = 'https://api.open-meteo.com/v1/forecast';
+```
+
+### Why Neshan Maps?
+
+**Advantages:**
+- 🇮🇷 **Best for Iran**: Superior coverage of Iranian locations
+- 🔤 **Persian Support**: Native Farsi language support
+- 🎯 **Accurate**: Better results for Iranian addresses
+- 💰 **Generous Free Tier**: 50,000 requests/month
+- 🚀 **Fast**: Low latency for Iranian users
+
+**API Usage:**
+```javascript
+// Neshan requires API key in headers
+fetch(url, {
+  headers: {
+    'Api-Key': 'your_api_key_here'
+  }
+});
 ```
 
 ### Switching to Different APIs
