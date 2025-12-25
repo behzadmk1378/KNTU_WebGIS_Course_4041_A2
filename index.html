@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Character encoding for proper text display -->
+    <meta charset="UTF-8">
+    
+    <!-- Responsive design meta tag for mobile compatibility -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Page title shown in browser tab -->
+    <title>WebGIS Assignment 2 - Interactive Map with Weather</title>
+    
+    <!-- OpenLayers CSS - provides default styling for map controls -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v10.3.1/ol.css">
+    
+    <!-- Link to external CSS stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Main container for the entire application -->
+    <div class="container">
+        
+        <!-- Header section with title -->
+        <header>
+            <h1>Interactive WebGIS Application</h1>
+            <p>Search for locations and get weather information by clicking on the map</p>
+        </header>
+        
+        <!-- Main content area where map will be displayed -->
+        <main>
+            <!-- Map container - OpenLayers will render the map inside this div -->
+            <div id="map"></div>
+        </main>
+        
+    </div>
+    
+    <!-- OpenLayers JavaScript library - core mapping functionality -->
+    <script src="https://cdn.jsdelivr.net/npm/ol@v10.3.1/dist/ol.js"></script>
+    
+    <!-- Link to external JavaScript file (will be loaded after HTML) -->
+    <script src="script.js"></script>
+</body>
+</html>
