@@ -97,10 +97,10 @@ function setupSearchListeners() {
 // Fetch autocomplete suggestions
 async function fetchAutocomplete(query) {
     try {
-        const isNeshan = GEOCODING_API_URL.includes('neshan');
+        const requiresApiKey = GEOCODING_API_URL.includes('neshan');
         let url, options = { method: 'GET' };
         
-        if (isNeshan) {
+        if (requiresApiKey) {
             url = `${GEOCODING_API_URL}?term=${encodeURIComponent(query)}`;
             options.headers = { 'Api-Key': GEOCODING_API_KEY };
         } else {
@@ -111,10 +111,10 @@ async function fetchAutocomplete(query) {
         if (!response.ok) return;
         
         const data = await response.json();
-        const results = isNeshan ? data.items : data;
+        const results = requiresApiKey ? data.items : data;
         
         if (results && results.length > 0) {
-            displaySearchResults(results, isNeshan);
+            displaySearchResults(results, requiresApiKey, true);
         }
         
     } catch (error) {
@@ -137,10 +137,10 @@ async function performSearch() {
     searchButton.textContent = '🔍 Searching...';
     
     try {
-        const isNeshan = GEOCODING_API_URL.includes('neshan');
+        const requiresApiKey = GEOCODING_API_URL.includes('neshan');
         let url, options = { method: 'GET' };
         
-        if (isNeshan) {
+        if (requiresApiKey) {
             url = `${GEOCODING_API_URL}?term=${encodeURIComponent(query)}`;
             options.headers = { 'Api-Key': GEOCODING_API_KEY };
         } else {
@@ -151,14 +151,14 @@ async function performSearch() {
         if (!response.ok) throw new Error('Search failed');
         
         const data = await response.json();
-        const results = isNeshan ? data.items : data;
+        const results = requiresApiKey ? data.items : data;
         
         if (!results || results.length === 0) {
             alert('Location not found');
             return;
         }
         
-        displaySearchResults(results, isNeshan);
+        displaySearchResults(results, requiresApiKey);
         
     } catch (error) {
         alert('Error: ' + error.message);
@@ -169,12 +169,12 @@ async function performSearch() {
 }
 
 // Display search results
-function displaySearchResults(results, isNeshan) {
+function displaySearchResults(results, requiresApiKey, isAutocomplete = false) {
     const container = document.getElementById('search-results');
     container.innerHTML = '';
     
-    if (results.length === 1) {
-        selectSearchResult(results[0], isNeshan);
+    if (results.length === 1 && !isAutocomplete) {
+        selectSearchResult(results[0], requiresApiKey);
         return;
     }
     
@@ -182,7 +182,7 @@ function displaySearchResults(results, isNeshan) {
         const item = document.createElement('div');
         item.className = 'search-result-item';
         
-        if (isNeshan) {
+        if (requiresApiKey) {
             item.innerHTML = `<div class="result-title">${result.title}</div>
                              <div class="result-address">${result.address || ''}</div>`;
         } else {
@@ -191,7 +191,7 @@ function displaySearchResults(results, isNeshan) {
                              <div class="result-address">${parts.slice(1).join(',')}</div>`;
         }
         
-        item.onclick = () => selectSearchResult(result, isNeshan);
+        item.onclick = () => selectSearchResult(result, requiresApiKey);
         container.appendChild(item);
     });
     
@@ -199,10 +199,10 @@ function displaySearchResults(results, isNeshan) {
 }
 
 // Select a search result
-function selectSearchResult(result, isNeshan) {
+function selectSearchResult(result, requiresApiKey) {
     let lon, lat, name;
     
-    if (isNeshan) {
+    if (requiresApiKey) {
         lon = result.location.x;
         lat = result.location.y;
         name = result.title;
