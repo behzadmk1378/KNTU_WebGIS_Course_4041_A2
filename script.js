@@ -1,6 +1,7 @@
 // Global variables
 let map;
 let markerLayer;
+let autocompleteTimeout;
 
 // API Configuration (fallback if config.js not loaded)
 const GEOCODING_API_KEY = typeof GEOCODING_API_KEY !== 'undefined' ? GEOCODING_API_KEY : 'YOUR_API_KEY_HERE';
@@ -52,15 +53,72 @@ function addMarker(coordinates, label) {
     source.addFeature(marker);
 }
 
-// Setup search button
+// Setup search button and autocomplete
 function setupSearchListeners() {
     const searchInput = document.getElementById('search-input');
     const searchButton = document.getElementById('search-button');
+    const resultsContainer = document.getElementById('search-results');
     
     searchButton.addEventListener('click', performSearch);
+    
     searchInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') performSearch();
+        if (e.key === 'Enter') {
+            resultsContainer.classList.add('hidden');
+            performSearch();
+        }
     });
+    
+    // Autocomplete as user types
+    searchInput.addEventListener('input', function(e) {
+        const query = e.target.value.trim();
+        
+        clearTimeout(autocompleteTimeout);
+        
+        if (query.length < 3) {
+            resultsContainer.classList.add('hidden');
+            return;
+        }
+        
+        // Wait 300ms after user stops typing
+        autocompleteTimeout = setTimeout(() => {
+            fetchAutocomplete(query);
+        }, 300);
+    });
+    
+    // Hide results when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !resultsContainer.contains(e.target)) {
+            resultsContainer.classList.add('hidden');
+        }
+    });
+}
+
+// Fetch autocomplete suggestions
+async function fetchAutocomplete(query) {
+    try {
+        const isNeshan = GEOCODING_API_URL.includes('neshan');
+        let url, options = { method: 'GET' };
+        
+        if (isNeshan) {
+            url = `${GEOCODING_API_URL}?term=${encodeURIComponent(query)}`;
+            options.headers = { 'Api-Key': GEOCODING_API_KEY };
+        } else {
+            url = `${GEOCODING_API_URL}?format=json&q=${encodeURIComponent(query)}&limit=5`;
+        }
+        
+        const response = await fetch(url, options);
+        if (!response.ok) return;
+        
+        const data = await response.json();
+        const results = isNeshan ? data.items : data;
+        
+        if (results && results.length > 0) {
+            displaySearchResults(results, isNeshan);
+        }
+        
+    } catch (error) {
+        // Silently fail for autocomplete
+    }
 }
 
 // Perform search
