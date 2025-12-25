@@ -12,17 +12,9 @@
 let map; // Main map object
 let markerLayer; // Vector layer for displaying search result markers
 
-// API Configuration
-// TODO: Replace with your actual API key from Nominatim or other geocoding service
-// For this example, we'll use Nominatim (OpenStreetMap's free geocoding service)
-// Nominatim doesn't require an API key but has usage limits
-const GEOCODING_API_URL = 'https://nominatim.openstreetmap.org/search';
-
-// Weather API Configuration
-// TODO: Replace 'YOUR_API_KEY_HERE' with your actual API key from Open-Meteo or OpenWeatherMap
-// For this example, we'll use Open-Meteo which is free and doesn't require an API key
-// Open-Meteo provides basic weather data without registration
-const WEATHER_API_URL = 'https://api.open-meteo.com/v1/forecast';
+// API Configuration is loaded from config.js
+// GEOCODING_API_URL and WEATHER_API_URL are defined there
+// This keeps API keys separate from the main code
 
 /* ============================================
    MAP INITIALIZATION
