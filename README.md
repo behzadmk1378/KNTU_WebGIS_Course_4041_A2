@@ -6,22 +6,27 @@ An interactive web mapping application built with OpenLayers that provides geoco
 
 ### Application Demo
 ![Demo](screenshots/demo.gif)
-*Complete application demonstration showing search, autocomplete, and weather features*
 
-### Autocomplete Suggestions
-![Autocomplete](screenshots/autocomplete.png)
-*Live suggestions appear as you type location names*
+*Complete application demonstration showing search, autocomplete, and weather features*
 
 ### Main Interface
 ![Main Interface](screenshots/main-interface.png)
+
 *Interactive map with search bar and OpenStreetMap tiles*
+
+### Autocomplete Suggestions
+![Autocomplete](screenshots/autocomplete.png)
+
+*Live suggestions appear as you type location names*
 
 ### Search Results
 ![Search Results](screenshots/searchresults.png)
+
 *Multiple matching locations displayed for selection*
 
 ### Weather Panel
 ![Weather Panel](screenshots/weather-panel.png)
+
 *Current weather information displayed on map click*
 
 ## 🌟 Features
