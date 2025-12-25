@@ -1,632 +1,251 @@
-/* ============================================
-   WEBGIS ASSIGNMENT 2 - INTERACTIVE MAP APPLICATION
-   Main JavaScript file for map functionality
-   ============================================ */
+// Global variables
+let map;
+let markerLayer;
 
-/* ============================================
-   GLOBAL VARIABLES
-   Store references to map components
-   ============================================ */
-
-// Global variables to store map and layer references
-let map; // Main map object
-let markerLayer; // Vector layer for displaying search result markers
-
-// API Configuration is loaded from config.js
-// GEOCODING_API_URL and WEATHER_API_URL are defined there
-// This keeps API keys separate from the main code
-
-/* ============================================
-   MAP INITIALIZATION
-   Creates and configures the OpenLayers map
-   ============================================ */
-
-// Wait for the DOM to be fully loaded before initializing the map
+// Wait for page to load
 document.addEventListener('DOMContentLoaded', function() {
-    
-    // Initialize the map
     initializeMap();
-    
-    // Set up event listeners for search functionality
     setupSearchListeners();
-    
-    // Set up event listeners for weather functionality
     setupWeatherListeners();
-    
 });
 
-/**
- * Initialize the OpenLayers map with base layer and view
- * This function sets up the map with OpenStreetMap tiles
- */
+// Initialize the map
 function initializeMap() {
-    
-    // Create a Vector Source to hold marker features
-    // Vector Source manages a collection of vector features (points, lines, polygons)
     const markerSource = new ol.source.Vector();
-    
-    // Create a Vector Layer to display markers
-    // Vector Layer renders vector features with custom styling
     markerLayer = new ol.layer.Vector({
         source: markerSource,
-        // Style defines how markers will look on the map
         style: new ol.style.Style({
-            // Image style for point features (markers)
             image: new ol.style.Circle({
-                radius: 8, // Size of the marker circle
-                fill: new ol.style.Fill({
-                    color: '#ff4444' // Red fill color
-                }),
-                stroke: new ol.style.Stroke({
-                    color: '#ffffff', // White border
-                    width: 2
-                })
+                radius: 8,
+                fill: new ol.style.Fill({ color: '#ff4444' }),
+                stroke: new ol.style.Stroke({ color: '#ffffff', width: 2 })
             })
         })
     });
     
-    // Create a map instance
-    // The Map is the core component of OpenLayers that brings everything together
     map = new ol.Map({
-        
-        // Target specifies which HTML element will contain the map
-        // It should match the id of our map container div in index.html
         target: 'map',
-        
-        // Layers define what we see on the map
-        // Layers array can contain multiple layers stacked on top of each other
         layers: [
-            // Create a Tile Layer with OpenStreetMap as the source
-            // Tile Layer displays map tiles in a grid pattern
-            new ol.layer.Tile({
-                // OSM (OpenStreetMap) is a free, open-source map tile provider
-                // It provides street-level map data from around the world
-                source: new ol.source.OSM()
-            }),
-            
-            // Add the marker layer on top of the base map
-            // This layer will display search result markers
+            new ol.layer.Tile({ source: new ol.source.OSM() }),
             markerLayer
         ],
-        
-        // View defines the map's viewport (center position, zoom level, projection)
         view: new ol.View({
-            // Center defines the initial map center position [longitude, latitude]
-            // Using Web Mercator projection (EPSG:3857) coordinates
-            // These coordinates point to Tehran, Iran
             center: ol.proj.fromLonLat([51.4093, 35.7447]),
-            
-            // Zoom level determines how close/far the view is
-            // Lower numbers = zoomed out (world view)
-            // Higher numbers = zoomed in (street level)
-            // Range typically: 0 (world) to 19 (building level)
-            zoom: 12,
-            
-            // Set minimum and maximum zoom levels for better UX
-            minZoom: 3,  // Prevent zooming out too far
-            maxZoom: 19  // Prevent zooming in beyond tile detail
+            zoom: 12
         })
     });
-    
-    console.log('Map initialized successfully');
 }
 
-/* ============================================
-   MARKER MANAGEMENT FUNCTIONS
-   Add and remove markers on the map
-   ============================================ */
-
-/**
- * Add a marker to the map at the specified coordinates
- * @param {Array} coordinates - [longitude, latitude] in EPSG:4326
- * @param {string} label - Optional label for the marker
- */
-function addMarker(coordinates, label = '') {
-    // Get the vector source from the marker layer
+// Add marker to map
+function addMarker(coordinates, label) {
     const source = markerLayer.getSource();
-    
-    // Clear any existing markers
-    // This ensures only one search result marker is shown at a time
     source.clear();
     
-    // Convert coordinates from longitude/latitude (EPSG:4326) to Web Mercator (EPSG:3857)
-    // OpenLayers map uses Web Mercator projection by default
-    const transformedCoords = ol.proj.fromLonLat(coordinates);
+    const point = new ol.geom.Point(ol.proj.fromLonLat(coordinates));
+    const marker = new ol.Feature({ geometry: point, name: label });
     
-    // Create a Point geometry at the transformed coordinates
-    const point = new ol.geom.Point(transformedCoords);
-    
-    // Create a Feature with the point geometry
-    // Feature represents a geographic element with geometry and properties
-    const marker = new ol.Feature({
-        geometry: point,
-        name: label // Store the label as a property
-    });
-    
-    // Add the marker feature to the vector source
-    // This will display the marker on the map
     source.addFeature(marker);
-    
-    console.log(`Marker added at: ${coordinates[0]}, ${coordinates[1]}`);
 }
 
-/* ============================================
-   GEOCODING SEARCH FUNCTIONALITY
-   Search for locations and display on map
-   ============================================ */
-
-/**
- * Set up event listeners for search functionality
- */
+// Setup search button
 function setupSearchListeners() {
-    // Get references to search UI elements
     const searchInput = document.getElementById('search-input');
     const searchButton = document.getElementById('search-button');
     
-    // Check if elements exist
-    if (!searchInput || !searchButton) {
-        console.error('Search elements not found!');
-        return;
-    }
-    
-    // Check if API configuration is loaded
-    if (typeof GEOCODING_API_URL === 'undefined' || typeof GEOCODING_API_KEY === 'undefined') {
-        console.error('API configuration not loaded! Make sure config.js is included before script.js');
-        alert('Error: API configuration not found. Please check console for details.');
-        return;
-    }
-    
-    console.log('API Config loaded:', { 
-        url: GEOCODING_API_URL, 
-        hasKey: GEOCODING_API_KEY ? 'Yes' : 'No' 
-    });
-    
-    // Add click event listener to search button
     searchButton.addEventListener('click', performSearch);
-    
-    // Add Enter key listener to search input for better UX
-    // Users can press Enter instead of clicking the button
-    searchInput.addEventListener('keypress', function(event) {
-        if (event.key === 'Enter') {
-            performSearch();
-        }
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') performSearch();
     });
-    
-    console.log('Search listeners initialized successfully');
 }
 
-/**
- * Perform geocoding search using the Fetch API
- * This is an async function because we need to wait for API responses
- */
+// Perform search
 async function performSearch() {
-    console.log('performSearch called');
-    
-    // Get the search input element
     const searchInput = document.getElementById('search-input');
     const searchButton = document.getElementById('search-button');
-    
-    // Get the search query from input and remove extra spaces
     const query = searchInput.value.trim();
     
-    console.log('Search query:', query);
-    
-    // Validate that user entered something
     if (!query) {
-        alert('Please enter a location to search');
+        alert('Please enter a location');
         return;
     }
     
-    // Disable button and show loading state
     searchButton.disabled = true;
     searchButton.textContent = '🔍 Searching...';
     
     try {
-        // Make API request using Fetch API
-        // await pauses execution until the fetch completes
-        console.log(`Searching for: ${query}`);
-        console.log('API URL:', GEOCODING_API_URL);
-        console.log('API Key:', GEOCODING_API_KEY ? 'Present' : 'Not needed');
+        const isNeshan = GEOCODING_API_URL.includes('neshan');
+        let url, options = { method: 'GET' };
         
-        // Determine which API we're using
-        const isNeshanAPI = GEOCODING_API_URL.includes('neshan');
-        
-        // Build the API URL with query parameters
-        let url;
-        let fetchOptions = { method: 'GET' };
-        
-        if (isNeshanAPI) {
-            // Neshan API uses 'term' parameter
+        if (isNeshan) {
             url = `${GEOCODING_API_URL}?term=${encodeURIComponent(query)}`;
-            // Neshan requires API key in headers
-            fetchOptions.headers = {
-                'Api-Key': GEOCODING_API_KEY,
-                'Content-Type': 'application/json'
-            };
+            options.headers = { 'Api-Key': GEOCODING_API_KEY };
         } else {
-            // Nominatim API uses 'q' parameter and format
-            // Get up to 5 results for user to choose from
             url = `${GEOCODING_API_URL}?format=json&q=${encodeURIComponent(query)}&limit=5`;
         }
         
-        console.log('Full request URL:', url);
+        const response = await fetch(url, options);
+        if (!response.ok) throw new Error('Search failed');
         
-        // Fetch data from API
-        const response = await fetch(url, fetchOptions);
-        
-        console.log('Response status:', response.status);
-        console.log('Response ok:', response.ok);
-        
-        // Check if the HTTP request was successful
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Response error:', errorText);
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        // Parse the JSON response
         const data = await response.json();
+        const results = isNeshan ? data.items : data;
         
-        console.log('API Response data:', data);
-        
-        // Check if we got any results
-        if (isNeshanAPI) {
-            if (!data.items || data.items.length === 0) {
-                console.warn('No results found in Neshan API response');
-                alert('Location not found. Please try a different search term.');
-                return;
-            }
-            console.log('Number of Neshan results:', data.items.length);
-        } else {
-            if (!data || data.length === 0) {
-                console.warn('No results found in Nominatim API response');
-                alert('Location not found. Please try a different search term.');
-                return;
-            }
-            console.log('Number of Nominatim results:', data.length);
+        if (!results || results.length === 0) {
+            alert('Location not found');
+            return;
         }
         
-        // Display results for user to choose
-        displaySearchResults(data, isNeshanAPI);
+        displaySearchResults(results, isNeshan);
         
     } catch (error) {
-        // Handle any errors that occurred during fetch or processing
-        console.error('Error during geocoding search:', error);
-        alert('An error occurred while searching. Please check your API key and try again.');
-        
+        alert('Error: ' + error.message);
     } finally {
-        // Re-enable button and restore original text
-        // finally block always executes, whether success or error
         searchButton.disabled = false;
         searchButton.textContent = '🔍 Search';
     }
 }
 
-/**
- * Animate the map view to center on a location with smooth transition
- * @param {Array} coordinates - [longitude, latitude] to zoom to
- */
-function animateToLocation(coordinates) {
-    // Get the map view
-    const view = map.getView();
+// Display search results
+function displaySearchResults(results, isNeshan) {
+    const container = document.getElementById('search-results');
+    container.innerHTML = '';
     
-    // Convert coordinates to the map's projection (Web Mercator)
-    const transformedCoords = ol.proj.fromLonLat(coordinates);
-    
-    // Animate the view to the new location
-    // Using OpenLayers animation features for smooth transition
-    view.animate({
-        center: transformedCoords, // Target center position
-        zoom: 14, // Target zoom level (street level)
-        duration: 1000 // Animation duration in milliseconds
-    });
-    
-    console.log('Animated to location');
-}
-
-/**
- * Display search results for user to choose from
- * @param {Array|Object} data - Search results from API
- * @param {boolean} isNeshanAPI - Whether using Neshan API
- */
-function displaySearchResults(data, isNeshanAPI) {
-    const resultsContainer = document.getElementById('search-results');
-    
-    // Clear previous results
-    resultsContainer.innerHTML = '';
-    
-    // Get results array based on API type
-    const results = isNeshanAPI ? data.items : data;
-    
-    // If only one result, select it automatically
     if (results.length === 1) {
-        selectSearchResult(results[0], isNeshanAPI);
+        selectSearchResult(results[0], isNeshan);
         return;
     }
     
-    // Create result items
-    results.forEach((result, index) => {
-        const resultItem = document.createElement('div');
-        resultItem.className = 'search-result-item';
+    results.forEach(result => {
+        const item = document.createElement('div');
+        item.className = 'search-result-item';
         
-        let title, address;
-        
-        if (isNeshanAPI) {
-            title = result.title;
-            address = result.address || 'No address available';
+        if (isNeshan) {
+            item.innerHTML = `<div class="result-title">${result.title}</div>
+                             <div class="result-address">${result.address || ''}</div>`;
         } else {
-            // For Nominatim, split display_name into title and address
             const parts = result.display_name.split(',');
-            title = parts[0];
-            address = parts.slice(1).join(',').trim();
+            item.innerHTML = `<div class="result-title">${parts[0]}</div>
+                             <div class="result-address">${parts.slice(1).join(',')}</div>`;
         }
         
-        resultItem.innerHTML = `
-            <div class="result-title">${title}</div>
-            <div class="result-address">${address}</div>
-        `;
-        
-        // Add click handler
-        resultItem.addEventListener('click', () => {
-            selectSearchResult(result, isNeshanAPI);
-        });
-        
-        resultsContainer.appendChild(resultItem);
+        item.onclick = () => selectSearchResult(result, isNeshan);
+        container.appendChild(item);
     });
     
-    // Show the results container
-    resultsContainer.classList.remove('hidden');
-    
-    console.log(`Displayed ${results.length} search results`);
+    container.classList.remove('hidden');
 }
 
-/**
- * Handle selection of a search result
- * @param {Object} result - Selected result object
- * @param {boolean} isNeshanAPI - Whether using Neshan API
- */
-function selectSearchResult(result, isNeshanAPI) {
-    let lon, lat, displayName;
+// Select a search result
+function selectSearchResult(result, isNeshan) {
+    let lon, lat, name;
     
-    if (isNeshanAPI) {
+    if (isNeshan) {
         lon = result.location.x;
         lat = result.location.y;
-        displayName = result.title;
-        const address = result.address || '';
-        displayName = address ? `${displayName}, ${address}` : displayName;
+        name = result.title;
     } else {
         lon = parseFloat(result.lon);
         lat = parseFloat(result.lat);
-        displayName = result.display_name;
+        name = result.display_name;
     }
     
-    console.log(`Selected: ${displayName} at [${lon}, ${lat}]`);
+    document.getElementById('search-results').classList.add('hidden');
+    document.getElementById('search-input').value = name;
     
-    // Hide results
-    const resultsContainer = document.getElementById('search-results');
-    resultsContainer.classList.add('hidden');
+    addMarker([lon, lat], name);
     
-    // Update search input
-    const searchInput = document.getElementById('search-input');
-    searchInput.value = displayName;
-    
-    // Add marker to the map
-    addMarker([lon, lat], displayName);
-    
-    // Animate the map to zoom to the found location
-    animateToLocation([lon, lat]);
+    map.getView().animate({
+        center: ol.proj.fromLonLat([lon, lat]),
+        zoom: 14,
+        duration: 1000
+    });
 }
 
-/* ============================================
-   WEATHER FUNCTIONALITY
-   Fetch and display weather data on map click
-   ============================================ */
-
-/**
- * Set up event listeners for weather functionality
- */
+// Setup weather listeners
 function setupWeatherListeners() {
-    // Add click event listener to the map
-    // When user clicks anywhere on the map, fetch weather for that location
     map.on('singleclick', function(event) {
-        // Get the clicked coordinates
-        const clickedCoord = event.coordinate;
-        
-        // Convert from Web Mercator (EPSG:3857) to longitude/latitude (EPSG:4326)
-        const lonLat = ol.proj.toLonLat(clickedCoord);
-        
-        // Extract longitude and latitude
-        const lon = lonLat[0];
-        const lat = lonLat[1];
-        
-        console.log(`Map clicked at: Lon ${lon}, Lat ${lat}`);
-        
-        // Fetch weather data for the clicked location
-        fetchWeatherData(lat, lon);
+        const coords = ol.proj.toLonLat(event.coordinate);
+        fetchWeather(coords[1], coords[0]);
     });
     
-    // Set up close button for weather panel
-    const closeButton = document.getElementById('close-weather');
-    closeButton.addEventListener('click', hideWeatherPanel);
-    
-    console.log('Weather listeners initialized');
+    document.getElementById('close-weather').onclick = hideWeather;
 }
 
-/**
- * Fetch weather data from the weather API
- * @param {number} lat - Latitude
- * @param {number} lon - Longitude
- */
-async function fetchWeatherData(lat, lon) {
-    const weatherPanel = document.getElementById('weather-panel');
-    const weatherContent = document.getElementById('weather-content');
+// Fetch weather data
+async function fetchWeather(lat, lon) {
+    const panel = document.getElementById('weather-panel');
+    const content = document.getElementById('weather-content');
     
-    // Show the weather panel
-    weatherPanel.classList.remove('hidden');
-    
-    // Show loading state
-    weatherContent.innerHTML = '<div class="weather-loading">⏳ Loading weather data...</div>';
+    panel.classList.remove('hidden');
+    content.innerHTML = '<div class="weather-loading">Loading...</div>';
     
     try {
-        // Build API URL with parameters
-        // Open-Meteo provides current weather data for free
-        // Parameters:
-        // - latitude, longitude: Location coordinates
-        // - current_weather=true: Request current weather conditions
-        // - temperature_unit=celsius: Use Celsius for temperature
-        const url = `${WEATHER_API_URL}?latitude=${lat}&longitude=${lon}&current_weather=true&temperature_unit=celsius`;
-        
-        console.log('Fetching weather data...');
-        
-        // Fetch data from weather API
+        const url = `${WEATHER_API_URL}?latitude=${lat}&longitude=${lon}&current_weather=true`;
         const response = await fetch(url);
         
-        // Check if request was successful
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error('Weather fetch failed');
         
-        // Parse JSON response
         const data = await response.json();
+        const weather = data.current_weather;
         
-        // Extract weather information
-        const currentWeather = data.current_weather;
-        
-        // Display weather data
-        displayWeatherData({
-            temperature: currentWeather.temperature,
-            windSpeed: currentWeather.windspeed,
-            windDirection: currentWeather.winddirection,
-            weatherCode: currentWeather.weathercode,
-            time: currentWeather.time,
-            latitude: lat.toFixed(4),
-            longitude: lon.toFixed(4)
+        displayWeather({
+            temp: weather.temperature,
+            wind: weather.windspeed,
+            windDir: weather.winddirection,
+            code: weather.weathercode,
+            lat: lat.toFixed(4),
+            lon: lon.toFixed(4)
         });
         
-        console.log('Weather data loaded successfully');
-        
     } catch (error) {
-        // Handle errors
-        console.error('Error fetching weather data:', error);
-        weatherContent.innerHTML = '<div class="weather-error">❌ Failed to load weather data. Please try again.</div>';
+        content.innerHTML = '<div class="weather-error">Failed to load weather</div>';
     }
 }
 
-/**
- * Display weather data in the weather panel
- * @param {Object} weatherData - Weather information to display
- */
-function displayWeatherData(weatherData) {
-    const weatherContent = document.getElementById('weather-content');
+// Display weather data
+function displayWeather(w) {
+    const content = document.getElementById('weather-content');
+    const conditions = getWeatherDesc(w.code);
+    const direction = getWindDir(w.windDir);
     
-    // Convert weather code to human-readable description
-    const weatherDescription = getWeatherDescription(weatherData.weatherCode);
-    
-    // Convert wind direction degrees to compass direction
-    const windDirectionText = getWindDirection(weatherData.windDirection);
-    
-    // Build HTML for weather display
-    const html = `
+    content.innerHTML = `
         <div class="weather-item">
             <span class="weather-label">📍 Location:</span>
-            <span class="weather-value">${weatherData.latitude}, ${weatherData.longitude}</span>
+            <span class="weather-value">${w.lat}, ${w.lon}</span>
         </div>
         <div class="weather-item">
             <span class="weather-label">🌡️ Temperature:</span>
-            <span class="weather-value">${weatherData.temperature}°C</span>
+            <span class="weather-value">${w.temp}°C</span>
         </div>
         <div class="weather-item">
             <span class="weather-label">☁️ Conditions:</span>
-            <span class="weather-value">${weatherDescription}</span>
+            <span class="weather-value">${conditions}</span>
         </div>
         <div class="weather-item">
-            <span class="weather-label">💨 Wind Speed:</span>
-            <span class="weather-value">${weatherData.windSpeed} km/h</span>
-        </div>
-        <div class="weather-item">
-            <span class="weather-label">🧭 Wind Direction:</span>
-            <span class="weather-value">${windDirectionText} (${weatherData.windDirection}°)</span>
-        </div>
-        <div class="weather-item">
-            <span class="weather-label">🕐 Updated:</span>
-            <span class="weather-value">${formatDateTime(weatherData.time)}</span>
+            <span class="weather-label">💨 Wind:</span>
+            <span class="weather-value">${w.wind} km/h ${direction}</span>
         </div>
     `;
-    
-    // Insert HTML into weather content container
-    weatherContent.innerHTML = html;
 }
 
-/**
- * Hide the weather panel
- */
-function hideWeatherPanel() {
-    const weatherPanel = document.getElementById('weather-panel');
-    weatherPanel.classList.add('hidden');
+// Hide weather panel
+function hideWeather() {
+    document.getElementById('weather-panel').classList.add('hidden');
 }
 
-/**
- * Convert WMO weather code to human-readable description
- * @param {number} code - WMO weather code
- * @returns {string} Weather description
- */
-function getWeatherDescription(code) {
-    // WMO Weather interpretation codes
-    const weatherCodes = {
-        0: 'Clear sky',
-        1: 'Mainly clear',
-        2: 'Partly cloudy',
-        3: 'Overcast',
-        45: 'Foggy',
-        48: 'Depositing rime fog',
-        51: 'Light drizzle',
-        53: 'Moderate drizzle',
-        55: 'Dense drizzle',
-        61: 'Slight rain',
-        63: 'Moderate rain',
-        65: 'Heavy rain',
-        71: 'Slight snow',
-        73: 'Moderate snow',
-        75: 'Heavy snow',
-        77: 'Snow grains',
-        80: 'Slight rain showers',
-        81: 'Moderate rain showers',
-        82: 'Violent rain showers',
-        85: 'Slight snow showers',
-        86: 'Heavy snow showers',
-        95: 'Thunderstorm',
-        96: 'Thunderstorm with slight hail',
-        99: 'Thunderstorm with heavy hail'
+// Get weather description
+function getWeatherDesc(code) {
+    const codes = {
+        0: 'Clear', 1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast',
+        45: 'Foggy', 51: 'Light drizzle', 61: 'Rain', 71: 'Snow',
+        80: 'Rain showers', 95: 'Thunderstorm'
     };
-    
-    return weatherCodes[code] || 'Unknown';
+    return codes[code] || 'Unknown';
 }
 
-/**
- * Convert wind direction in degrees to compass direction
- * @param {number} degrees - Wind direction in degrees (0-360)
- * @returns {string} Compass direction (N, NE, E, etc.)
- */
-function getWindDirection(degrees) {
-    const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
-    // Calculate which direction slice the degrees falls into
-    const index = Math.round(degrees / 45) % 8;
-    return directions[index];
-}
-
-/**
- * Format ISO datetime string to readable format
- * @param {string} isoString - ISO 8601 datetime string
- * @returns {string} Formatted datetime
- */
-function formatDateTime(isoString) {
-    const date = new Date(isoString);
-    return date.toLocaleString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
+// Get wind direction
+function getWindDir(deg) {
+    const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    return dirs[Math.round(deg / 45) % 8];
 }
 
 
