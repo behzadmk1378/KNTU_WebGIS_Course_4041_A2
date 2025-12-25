@@ -445,6 +445,10 @@ This design makes it easy to switch between different geocoding services without
 
 ## 📸 Screenshots
 
+### Demo
+![Demo](screenshots/demo.gif)
+*Complete application demonstration*
+
 ### Main Interface
 ![Main Interface](screenshots/main-interface.png)
 *Interactive map with search bar and OpenStreetMap tiles*
@@ -464,8 +468,6 @@ This design makes it easy to switch between different geocoding services without
 ### Marker Placement
 ![Marker](screenshots/marker-placement.png)
 *Red circular marker shows selected location*
-
-> **Note**: Add actual screenshots by creating a `screenshots/` folder and capturing your application in action!
 
 ## 🎓 Learning Outcomes
 
