@@ -1,14 +1,15 @@
 # WebGIS Assignment 2 - Interactive Map with Weather
 
-An interactive web mapping application built with OpenLayers that provides geocoding search functionality and real-time weather information.
+An interactive web mapping application built with OpenLayers that provides geocoding search functionality with autocomplete and real-time weather information.
 
 ## 🌟 Features
 
 - **Interactive Map**: Powered by OpenLayers with OpenStreetMap base tiles
-- **Location Search**: Search for any location worldwide using geocoding
+- **Location Search with Autocomplete**: Search for any location worldwide with live suggestions
 - **Weather Information**: Click anywhere on the map to get current weather data
-- **Responsive Design**: Works seamlessly on desktop and mobile devices
+- **Multiple Search Results**: Choose from multiple matching locations
 - **Smooth Animations**: Animated map transitions and user-friendly interactions
+- **Simple Setup**: No external configuration files needed
 
 ## 📋 Table of Contents
 
@@ -22,11 +23,15 @@ An interactive web mapping application built with OpenLayers that provides geoco
 - [Usage](#usage)
 - [Project Structure](#project-structure)
 - [API Configuration](#api-configuration)
+- [Screenshots](#screenshots)
 
 ## 🚀 Demo
 
 ### How to Use:
-1. **Search for a Location**: Enter a city, address, or landmark in the search bar
+1. **Search for a Location**: 
+   - Start typing a city, address, or landmark in the search bar
+   - Autocomplete suggestions appear after 3 characters (waits 300ms after you stop typing)
+   - Click a suggestion or press Enter to search
 2. **Click the Map**: Click anywhere on the map to get weather information for that location
 3. **View Weather Data**: See temperature, wind speed, conditions, and more
 4. **Close Panel**: Click the X button to close the weather panel
@@ -36,9 +41,9 @@ An interactive web mapping application built with OpenLayers that provides geoco
 - **OpenLayers 10.3.1**: High-performance mapping library
 - **HTML5**: Modern semantic markup
 - **CSS3**: Custom styling with gradients and animations
-- **Vanilla JavaScript**: No frameworks required
+- **Vanilla JavaScript**: No frameworks required - pure ES6+
 - **Fetch API**: Modern asynchronous HTTP requests
-- **Neshan Maps API**: Iranian-focused geocoding service with Persian support
+- **Nominatim API**: Free geocoding service from OpenStreetMap
 - **Open-Meteo API**: Free weather data service
 
 ## 🗺️ OpenLayers Features
@@ -49,40 +54,46 @@ This project demonstrates the following OpenLayers capabilities:
 - `ol.Map`: Core map component
 - `ol.View`: Controls map viewport (center, zoom, projection)
 - Projection transformation: Converting between EPSG:4326 (WGS84) and EPSG:3857 (Web Mercator)
+- Initial center: Tehran, Iran (51.4093, 35.7447)
+- Default zoom level: 12
 
 ### 2. **Layers**
 
 #### Tile Layer (Base Map)
 - `ol.layer.Tile`: Displays tiled map images
 - `ol.source.OSM`: OpenStreetMap tile source
-- Provides street-level map data
+- Provides street-level map data worldwide
 
 #### Vector Layer (Markers)
 - `ol.layer.Vector`: Renders vector features
 - `ol.source.Vector`: Manages vector feature collection
-- `ol.Feature`: Represents geographic elements
+- `ol.Feature`: Represents geographic elements (search result markers)
 - `ol.geom.Point`: Point geometry for markers
 
 ### 3. **Styling**
-- `ol.style.Style`: Feature styling
-- `ol.style.Circle`: Circular point markers
-- `ol.style.Fill`: Fill colors for markers
-- `ol.style.Stroke`: Border styling
+- `ol.style.Style`: Feature styling system
+- `ol.style.Circle`: Circular point markers (8px radius)
+- `ol.style.Fill`: Red fill color (#ff4444) for markers
+- `ol.style.Stroke`: White border (2px) for marker visibility
 
 ### 4. **Interactions**
-- Map click events (`singleclick`)
-- Coordinate transformation (`ol.proj.fromLonLat`, `ol.proj.toLonLat`)
-- Dynamic feature management (add/remove markers)
+- **Map Click Events**: `singleclick` event to fetch weather data
+- **Coordinate Transformation**: 
+  - `ol.proj.fromLonLat()`: Convert API coordinates to map projection
+  - `ol.proj.toLonLat()`: Convert map clicks to lat/lon for weather API
+- **Dynamic Features**: Add/clear markers on each search
 
-### 5. **View Controls**
-- `view.animate()`: Smooth map transitions
-- Configurable zoom levels (min: 3, max: 19)
-- Center positioning
+### 5. **View Controls & Animation**
+- `view.animate()`: Smooth map transitions to search results
+- Animation parameters:
+  - Duration: 1000ms (1 second)
+  - Target zoom: 14 (street level detail)
+  - Easing: Default smooth easing
 
 ### 6. **Coordinate Systems**
-- **EPSG:4326**: Longitude/Latitude (used by APIs)
-- **EPSG:3857**: Web Mercator (used by OpenLayers)
-- Automatic coordinate transformations
+- **EPSG:4326** (WGS84): Longitude/Latitude format used by APIs
+- **EPSG:3857** (Web Mercator): Internal OpenLayers projection
+- Automatic bidirectional coordinate transformations
 
 ## 📊 API Research & Comparison
 
@@ -98,6 +109,81 @@ I researched and compared the following geocoding APIs:
 | **LocationIQ** | ✅ 5,000 requests/day | 5,000/day (150k/month) | $49/month for 100k requests | ✅ Yes | [locationiq.com](https://locationiq.com/) |
 
 #### Price Comparison & Ratios
+
+Calculating for 100,000 requests per month:
+
+- **Nominatim**: FREE (community service)
+- **Google Maps**: ~$250 (after $200 credit: $5 × 50 = $250)
+- **Mapbox**: FREE (within free tier)
+- **LocationIQ**: FREE (within free tier)
+
+**Price Ratios (for 500,000 requests/month):**
+- Google Maps: $2,500 (baseline)
+- Mapbox: $2,000 (0.8× Google Maps cost)
+- LocationIQ: $294 (0.12× Google Maps cost - **8.3× cheaper!**)
+- Nominatim: FREE (∞× cheaper, but rate-limited)
+
+#### My Choice: **Nominatim**
+
+**Reasoning:**
+1. ✅ **Zero Cost**: Completely free with no registration or credit card
+2. ✅ **No API Key**: Simplifies setup - works immediately
+3. ✅ **Sufficient Rate Limit**: 1 req/sec is adequate for educational projects and small applications
+4. ✅ **Privacy**: Open-source, no user tracking or data collection
+5. ✅ **Reliability**: Backed by the robust OpenStreetMap community
+6. ✅ **Global Coverage**: Worldwide location data from OSM
+7. ✅ **Easy Integration**: Simple REST API with JSON responses
+
+**Limitations**: 
+- For production apps with high traffic (>86,400 requests/day), I would switch to LocationIQ or Mapbox
+- Rate limit of 1 req/sec requires implementing request throttling for bulk operations
+
+### Weather APIs
+
+I researched and compared the following weather APIs:
+
+| API Provider | Free Tier | Rate Limit (Free) | Paid Pricing | API Key Required | Website |
+|--------------|-----------|-------------------|--------------|------------------|---------|
+| **Open-Meteo** | ✅ Unlimited | 10,000 requests/day | Free only | ❌ No | [open-meteo.com](https://open-meteo.com/) |
+| **OpenWeatherMap** | ✅ 1,000 requests/day | 60 calls/minute | $40/month for 100k calls | ✅ Yes | [openweathermap.org](https://openweathermap.org/api) |
+| **WeatherAPI.com** | ✅ 1,000,000 calls/month | 1 million/month | $9.99/month for 2M calls | ✅ Yes | [weatherapi.com](https://www.weatherapi.com/) |
+| **Visual Crossing** | ✅ 1,000 records/day | 1,000/day (30k/month) | $0.0001 per record | ✅ Yes | [visualcrossing.com](https://www.visualcrossing.com/weather-api) |
+
+#### Price Comparison & Ratios
+
+Calculating for 100,000 requests per month (~3,300/day):
+
+- **Open-Meteo**: FREE
+- **OpenWeatherMap**: ~$120 ($40/month for 100k calls)
+- **WeatherAPI.com**: FREE (within free tier)
+- **Visual Crossing**: $10 (0.0001 × 100,000)
+
+**Price Ratios (for 3,000,000 requests/month):**
+- OpenWeatherMap: $1,200 (baseline: $40 × 30 = $1,200)
+- WeatherAPI.com: $29.97 (0.025× OpenWeatherMap - **40× cheaper!**)
+- Visual Crossing: $300 (0.25× OpenWeatherMap - **4× cheaper**)
+- Open-Meteo: FREE (**∞× cheaper!**)
+
+#### My Choice: **Open-Meteo**
+
+**Reasoning:**
+1. ✅ **Zero Cost**: Completely free with no API key required
+2. ✅ **Generous Limits**: 10,000 requests/day is excellent for any educational or small commercial project
+3. ✅ **No Registration**: No account creation barriers - works immediately
+4. ✅ **High Data Quality**: Aggregates data from multiple meteorological sources (NOAA, DWD, etc.)
+5. ✅ **Rich Features**: Current weather, forecasts, historical data all available
+6. ✅ **Open Source**: Transparent methodology and community-driven
+7. ✅ **Perfect for Learning**: Zero barriers to entry
+8. ✅ **WMO Standards**: Uses standard weather codes for reliable interpretation
+
+**Alternative**: For production applications requiring advanced features (weather alerts, air quality indices, marine data), I would consider **WeatherAPI.com** for its excellent free tier (1M requests/month) and very low paid pricing.
+
+## 💾 Installation & Setup
+
+### Prerequisites
+- A modern web browser (Chrome, Firefox, Edge, Safari)
+- No build tools required!
+- No API keys needed!
 
 Calculating for 100,000 requests per month:
 
@@ -166,34 +252,19 @@ Calculating for 100,000 requests per month (~3,300/day):
 ### Prerequisites
 - A modern web browser (Chrome, Firefox, Edge, Safari)
 - No build tools required!
+- No API keys needed!
 
-### Steps
+### Quick Start (3 Easy Steps)
 
-1. **Clone or download this repository**
+1. **Download the project**
    ```bash
    git clone <your-repo-url>
    cd KNTU_WebGIS_Course_4041_A2
    ```
 
-2. **Configure API Keys**
-   ```bash
-   # Copy the example configuration file
-   copy config.example.js config.js
-   
-   # Edit config.js and add your Neshan API key
-   # Get your free API key from: https://platform.neshan.org/
-   ```
-   
-   **Required:** Add your Neshan API key to `config.js`:
-   ```javascript
-   const GEOCODING_API_KEY = 'your_neshan_api_key_here';
-   ```
-   
-   **Important:** `config.js` is excluded from Git via `.gitignore` to protect your API keys.
-
-3. **Open the project**
-   - Simply open `index.html` in your web browser
-   - Or use a local server for better performance:
+2. **Open the application**
+   - **Option A**: Simply double-click `index.html` to open in your browser
+   - **Option B**: Use a local server for better performance:
      ```bash
      # Python 3
      python -m http.server 8000
@@ -201,124 +272,202 @@ Calculating for 100,000 requests per month (~3,300/day):
      # Or Python 2
      python -m SimpleHTTPServer 8000
      
-     # Or Node.js (npx http-server)
+     # Or Node.js
      npx http-server
      ```
 
-4. **Access the application**
-   - Open your browser and navigate to `http://localhost:8000`
+3. **Start using**
+   - If using a server, navigate to `http://localhost:8000`
+   - The app works immediately - no configuration needed!
 
-### API Keys Setup
+### API Configuration (Built-in)
 
-**Geocoding API - Neshan Maps** 🇮🇷
-- Get your free API key from [Neshan Platform](https://platform.neshan.org/)
-- Free tier: 50,000 requests per month
-- Excellent for Iranian locations and Persian addresses
-- Add your key to `config.js`
+The application comes pre-configured with free APIs that require no registration:
 
-**Weather API - Open-Meteo** ✅
-- No API key required
-- Completely free with generous limits
+```javascript
+// Built into script.js - no changes needed!
+const GEOCODING_API_KEY = '';  // Nominatim doesn't need a key
+const GEOCODING_API_URL = 'https://nominatim.openstreetmap.org/search';
+const WEATHER_API_KEY = '';  // Open-Meteo doesn't need a key
+const WEATHER_API_URL = 'https://api.open-meteo.com/v1/forecast';
+```
 
-If you want to use alternative APIs (Google Maps, OpenWeatherMap, etc.), simply edit `config.js` and add your keys there.
+**Why no API keys?**
+- Both Nominatim and Open-Meteo are completely free services
+- No registration or authentication required
+- Perfect for educational projects and getting started quickly
+
+### Optional: Using Alternative APIs
+
+If you want to use different geocoding services (Google Maps, Mapbox, etc.), you can edit the API configuration at the top of `script.js`:
+
+**Example: Using a service that requires an API key:**
+```javascript
+// Edit these lines in script.js
+const GEOCODING_API_KEY = 'your_api_key_here';
+const GEOCODING_API_URL = 'https://api.example.com/geocode';
+```
+
+Then modify the fetch logic to match your chosen API's request/response format.
 
 ## 📖 Usage
 
-### Search for a Location
+### Search for a Location with Autocomplete
 
-1. Type a location name in the search bar (e.g., "Tehran", "Paris", "Tokyo")
-2. Click the Search button or press Enter
-3. The map will animate to the location and place a marker
-4. The search input will update with the full address
+1. Click on the search bar and start typing (e.g., "Tehran", "Paris", "New York")
+2. After typing 3 or more characters, wait 300ms and autocomplete suggestions will appear
+3. You'll see up to 5 matching locations with:
+   - **Title**: Main location name
+   - **Address**: Full address details
+4. Click on any suggestion to select it, or press Enter to search with your current input
+5. The map will smoothly animate to the location and place a red marker
+6. Click outside the suggestions to hide them
 
 ### Get Weather Information
 
-1. Click anywhere on the map
-2. A weather panel will appear in the bottom-right corner
-3. View current weather conditions:
-   - 📍 Location coordinates
-   - 🌡️ Temperature
-   - ☁️ Weather conditions
-   - 💨 Wind speed
-   - 🧭 Wind direction
-   - 🕐 Last update time
+1. Click anywhere on the map (on land or sea!)
+2. A weather panel will appear in the bottom-right corner showing:
+   - 📍 **Location**: Coordinates (latitude, longitude)
+   - 🌡️ **Temperature**: Current temperature in Celsius
+   - ☁️ **Conditions**: Weather description (Clear, Cloudy, Rain, etc.)
+   - 💨 **Wind**: Wind speed in km/h and direction (N, NE, E, etc.)
+3. Weather data is fetched in real-time from Open-Meteo
 
 ### Close Weather Panel
 
-- Click the X button in the top-right of the weather panel
+- Click the ❌ button in the top-right corner of the weather panel
 
 ## 📁 Project Structure
 
 ```
 KNTU_WebGIS_Course_4041_A2/
 │
-├── index.html          # Main HTML file with structure
-├── style.css           # All styling and responsive design
-├── script.js           # JavaScript with all functionality
-├── config.js           # API keys configuration (NOT in Git)
-├── config.example.js   # Example config file (safe to commit)
-├── .gitignore          # Excludes sensitive files from Git
-├── README.md           # This file - project documentation
-└── INSTRUCTIONS.md     # Assignment instructions
+├── index.html          # Main HTML structure
+├── style.css           # All styling (header, search, map, weather panel)
+├── script.js           # Complete application logic with API configuration
+├── README.md           # This comprehensive documentation
+└── INSTRUCTIONS.md     # Original assignment instructions
 ```
 
-## 🔧 API Configuration
+**Simplified Structure:**
+- No `config.js` - API settings are directly in `script.js`
+- No `.gitignore` - using free public APIs with no sensitive keys
+- No build process - pure vanilla JavaScript
+- Only 3 main files to work with!
+
+## 🔧 API Configuration Details
 
 ### Current Configuration
 
-The application uses Neshan Maps for geocoding and Open-Meteo for weather:
-
+**Geocoding: Nominatim (OpenStreetMap)**
 ```javascript
-// Neshan Geocoding API (Requires API Key)
-const GEOCODING_API_KEY = 'your_api_key_here';
-const GEOCODING_API_URL = 'https://api.neshan.org/v1/search';
+const GEOCODING_API_URL = 'https://nominatim.openstreetmap.org/search';
+const GEOCODING_API_KEY = '';  // Not needed
 
-// Weather API (Open-Meteo - No key required)
-const WEATHER_API_URL = 'https://api.open-meteo.com/v1/forecast';
-```
+// Request format:
+// GET https://nominatim.openstreetmap.org/search?format=json&q=Tehran&limit=5
 
-### Why Neshan Maps?
-
-**Advantages:**
-- 🇮🇷 **Best for Iran**: Superior coverage of Iranian locations
-- 🔤 **Persian Support**: Native Farsi language support
-- 🎯 **Accurate**: Better results for Iranian addresses
-- 💰 **Generous Free Tier**: 50,000 requests/month
-- 🚀 **Fast**: Low latency for Iranian users
-
-**API Usage:**
-```javascript
-// Neshan requires API key in headers
-fetch(url, {
-  headers: {
-    'Api-Key': 'your_api_key_here'
+// Response format:
+[
+  {
+    "display_name": "Tehran, Iran",
+    "lat": "35.6892",
+    "lon": "51.3890"
   }
-});
+]
 ```
 
-### Switching to Different APIs
+**Weather: Open-Meteo**
+```javascript
+const WEATHER_API_URL = 'https://api.open-meteo.com/v1/forecast';
+const WEATHER_API_KEY = '';  // Not needed
 
-#### Using Google Maps Geocoding
+// Request format:
+// GET https://api.open-meteo.com/v1/forecast?latitude=35.7&longitude=51.4&current_weather=true
 
-1. Get API key from [Google Cloud Console](https://console.cloud.google.com/)
-2. Update `script.js`:
-   ```javascript
-   const GEOCODING_API_KEY = 'YOUR_GOOGLE_API_KEY';
-   const GEOCODING_API_URL = 'https://maps.googleapis.com/maps/api/geocode/json';
-   ```
-3. Modify the fetch URL in `performSearch()` function
+// Response format:
+{
+  "current_weather": {
+    "temperature": 18.5,
+    "windspeed": 12.3,
+    "winddirection": 180,
+    "weathercode": 0
+  }
+}
+```
 
-#### Using OpenWeatherMap
+### Code Architecture
 
-1. Get API key from [OpenWeatherMap](https://openweathermap.org/api)
-2. Update `script.js`:
-   ```javascript
-   const WEATHER_API_KEY = 'YOUR_OPENWEATHERMAP_KEY';
-   const WEATHER_API_URL = 'https://api.openweathermap.org/data/2.5/weather';
-   ```
-3. Modify the fetch URL in `fetchWeatherData()` function
+The application uses a dual API detection system:
 
-## 🎯 Learning Outcomes
+```javascript
+// Detects which API is being used based on URL
+const requiresApiKey = GEOCODING_API_URL.includes('neshan');
+
+if (requiresApiKey) {
+    // API that needs authentication (like Neshan, Google Maps)
+    options.headers = { 'Api-Key': GEOCODING_API_KEY };
+    // Parse response: data.items
+} else {
+    // Public API (like Nominatim)
+    // No headers needed
+    // Parse response: data (array)
+}
+```
+
+This design makes it easy to switch between different geocoding services without rewriting the entire fetch logic.
+
+## 🎯 Key Features Explained
+
+### 1. Autocomplete Search
+- **Debouncing**: Waits 300ms after user stops typing to avoid excessive API calls
+- **Minimum Characters**: Requires 3+ characters to trigger autocomplete
+- **Live Results**: Shows up to 5 matching locations in real-time
+- **Click-outside Dismissal**: Results dropdown closes when clicking elsewhere
+- **Keyboard Support**: Press Enter to search without selecting from dropdown
+
+### 2. Multiple Results Handling
+- When multiple locations match, displays all options for user selection
+- Each result shows title and full address for clarity
+- Single-click selection updates map and closes dropdown
+- Prevents auto-selection during autocomplete (only on explicit search)
+
+### 3. Weather Data Interpretation
+- Uses WMO (World Meteorological Organization) weather codes
+- Converts numeric codes to readable descriptions
+- Wind direction converted from degrees to compass directions (N, NE, E, etc.)
+- Temperature displayed in Celsius
+
+### 4. Map Animations
+- Smooth 1-second animation when zooming to search results
+- Markers automatically cleared and replaced on new search
+- View animates to zoom level 14 for optimal street-level detail
+
+## 📸 Screenshots
+
+### Main Interface
+![Main Interface](screenshots/main-interface.png)
+*Interactive map with search bar and OpenStreetMap tiles*
+
+### Autocomplete Suggestions
+![Autocomplete](screenshots/autocomplete.png)
+*Live suggestions appear as you type location names*
+
+### Search Results
+![Search Results](screenshots/search-results.png)
+*Multiple matching locations displayed for selection*
+
+### Weather Panel
+![Weather Panel](screenshots/weather-panel.png)
+*Current weather information displayed on map click*
+
+### Marker Placement
+![Marker](screenshots/marker-placement.png)
+*Red circular marker shows selected location*
+
+> **Note**: Add actual screenshots by creating a `screenshots/` folder and capturing your application in action!
+
+## 🎓 Learning Outcomes
 
 Through this project, I learned:
 
@@ -329,26 +478,121 @@ Through this project, I learned:
    - Coordinate transformations between projections
 
 2. **Asynchronous JavaScript**
-   - Using the Fetch API for HTTP requests
-   - Async/await syntax for cleaner code
-   - Error handling with try-catch
-   - Promise-based programming
+   - Using the Fetch API for HTTP requests to geocoding and weather services
+   - Async/await syntax for cleaner, more readable asynchronous code
+   - Error handling with try-catch blocks
+   - Promise-based programming patterns
+   - Debouncing user input to optimize API calls
 
-3. **API Integration**
-   - Researching and comparing different API providers
-   - Understanding rate limits and pricing models
+3. **API Integration & Research**
+   - Comparing multiple API providers (4 geocoding + 4 weather APIs)
+   - Understanding rate limits, pricing models, and free tier limitations
    - Making authenticated vs. public API calls
-   - Parsing and displaying API responses
+   - Parsing different JSON response formats
+   - Implementing dual API support with automatic detection
+   - Cost-benefit analysis for API selection
 
-4. **Web Development Best Practices**
-   - Responsive design principles
-   - Clean, commented code
+4. **User Experience Design**
+   - Autocomplete with debouncing (300ms delay)
+   - Multiple search results with clear selection UI
+   - Loading states and user feedback
+   - Error handling with user-friendly messages
+   - Smooth animations and transitions
+   - Click-outside-to-close behavior
+
+5. **Web Development Best Practices**
+   - Clean, maintainable code structure
    - Separation of concerns (HTML/CSS/JS)
-   - User experience considerations
+   - Meaningful variable and function names
+   - Comment strategy for beginner-level code
+   - No external dependencies (pure vanilla JavaScript)
+   - Browser compatibility considerations
+
+6. **Problem Solving**
+   - Researching and comparing 8 different APIs
+   - Calculating price ratios for cost comparison
+   - Implementing fallback strategies
+   - Handling edge cases (no results, API errors, network failures)
+
+## 🚀 Advanced Features
+
+### Autocomplete Implementation
+```javascript
+// Debouncing to avoid excessive API calls
+searchInput.addEventListener('input', function(e) {
+    clearTimeout(autocompleteTimeout);
+    if (query.length < 3) return;
+    
+    autocompleteTimeout = setTimeout(() => {
+        fetchAutocomplete(query);
+    }, 300);
+});
+```
+
+### Dual API Support
+```javascript
+// Automatic API detection
+const requiresApiKey = GEOCODING_API_URL.includes('neshan');
+
+// Different handling for different APIs
+const results = requiresApiKey ? data.items : data;
+```
+
+### Weather Code Interpretation
+```javascript
+// WMO weather codes converted to readable descriptions
+function getWeatherDesc(code) {
+    const codes = {
+        0: 'Clear', 1: 'Mainly clear', 2: 'Partly cloudy',
+        45: 'Foggy', 61: 'Rain', 95: 'Thunderstorm'
+    };
+    return codes[code] || 'Unknown';
+}
+```
+
+## 🐛 Known Limitations
+
+1. **Rate Limiting**: Nominatim has a 1 req/sec limit - not suitable for high-traffic applications
+2. **No Caching**: Each search makes a new API request (could be optimized with caching)
+3. **English Only UI**: Interface text is in English (could be internationalized)
+4. **Desktop Optimized**: Mobile responsiveness was removed per requirements
+5. **Basic Error Messages**: Could provide more detailed error information
+
+## 🔮 Future Enhancements
+
+- Add result caching to reduce API calls
+- Implement geolocation to find user's current location
+- Add route planning between two points
+- Display weather forecast (not just current weather)
+- Add more weather data (humidity, pressure, UV index)
+- Implement custom map styles/themes
+- Add multiple marker support
+- Save favorite locations
+- Export location data
+
+## 📚 Resources & Documentation
+
+### OpenLayers
+- [Official Documentation](https://openlayers.org/en/latest/apidoc/)
+- [Examples](https://openlayers.org/en/latest/examples/)
+- [Tutorials](https://openlayers.org/doc/tutorials/)
+
+### APIs Used
+- [Nominatim API Docs](https://nominatim.org/release-docs/latest/api/Overview/)
+- [Open-Meteo API Docs](https://open-meteo.com/en/docs)
+- [WMO Weather Codes](https://open-meteo.com/en/docs#weathervariables)
+
+### Alternative APIs Researched
+- [Google Maps Geocoding API](https://developers.google.com/maps/documentation/geocoding)
+- [Mapbox Geocoding API](https://docs.mapbox.com/api/search/geocoding/)
+- [LocationIQ API](https://locationiq.com/docs)
+- [OpenWeatherMap API](https://openweathermap.org/api)
+- [WeatherAPI.com](https://www.weatherapi.com/docs/)
+- [Visual Crossing Weather](https://www.visualcrossing.com/weather-api)
 
 ## 👨‍💻 Author
 
-Created as part of KNTU WebGIS Course Assignment 2.
+Created as part of KNTU WebGIS Course Assignment 2 - Term 1, 2024/2025
 
 ## 📄 License
 
@@ -356,8 +600,13 @@ This project is created for educational purposes as part of a university assignm
 
 ## 🙏 Acknowledgments
 
-- [OpenLayers](https://openlayers.org/) - Amazing open-source mapping library
+- [OpenLayers](https://openlayers.org/) - Powerful open-source mapping library
 - [OpenStreetMap](https://www.openstreetmap.org/) - Community-driven map data
-- [Nominatim](https://nominatim.org/) - Free geocoding service
-- [Open-Meteo](https://open-meteo.com/) - Free weather API
+- [Nominatim](https://nominatim.org/) - Free geocoding service by OSM
+- [Open-Meteo](https://open-meteo.com/) - Free weather API with excellent data quality
 - KNTU WebGIS Course instructors and teaching assistants
+- The open-source community for making free tools accessible to students
+
+---
+
+**⭐ If you found this project helpful, please consider giving it a star!**
