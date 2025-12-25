@@ -2,6 +2,32 @@
 
 An interactive web mapping application built with OpenLayers that provides geocoding search functionality with autocomplete and real-time weather information.
 
+## 📸 Demo & Screenshots
+
+### Application Demo
+![Demo](screenshots/demo.gif)
+*Complete application demonstration showing search, autocomplete, and weather features*
+
+### Autocomplete Suggestions
+![Autocomplete](screenshots/autocomplete.png)
+*Live suggestions appear as you type location names*
+
+### Main Interface
+![Main Interface](screenshots/main-interface.png)
+*Interactive map with search bar and OpenStreetMap tiles*
+
+### Search Results
+![Search Results](screenshots/search-results.png)
+*Multiple matching locations displayed for selection*
+
+### Weather Panel
+![Weather Panel](screenshots/weather-panel.png)
+*Current weather information displayed on map click*
+
+### Marker Placement
+![Marker](screenshots/marker-placement.png)
+*Red circular marker shows selected location*
+
 ## 🌟 Features
 
 - **Interactive Map**: Powered by OpenLayers with OpenStreetMap base tiles
@@ -13,7 +39,8 @@ An interactive web mapping application built with OpenLayers that provides geoco
 
 ## 📋 Table of Contents
 
-- [Demo](#demo)
+- [Demo](#demo--screenshots)
+- [Features](#-features)
 - [Technologies Used](#technologies-used)
 - [OpenLayers Features](#openlayers-features)
 - [API Research & Comparison](#api-research--comparison)
@@ -23,11 +50,9 @@ An interactive web mapping application built with OpenLayers that provides geoco
 - [Usage](#usage)
 - [Project Structure](#project-structure)
 - [API Configuration](#api-configuration)
-- [Screenshots](#screenshots)
 
-## 🚀 Demo
+## 🚀 How to Use
 
-### How to Use:
 1. **Search for a Location**: 
    - Start typing a city, address, or landmark in the search bar
    - Autocomplete suggestions appear after 3 characters (waits 300ms after you stop typing)
@@ -442,32 +467,6 @@ This design makes it easy to switch between different geocoding services without
 - Smooth 1-second animation when zooming to search results
 - Markers automatically cleared and replaced on new search
 - View animates to zoom level 14 for optimal street-level detail
-
-## 📸 Screenshots
-
-### Demo
-![Demo](screenshots/demo.gif)
-*Complete application demonstration*
-
-### Main Interface
-![Main Interface](screenshots/main-interface.png)
-*Interactive map with search bar and OpenStreetMap tiles*
-
-### Autocomplete Suggestions
-![Autocomplete](screenshots/autocomplete.png)
-*Live suggestions appear as you type location names*
-
-### Search Results
-![Search Results](screenshots/search-results.png)
-*Multiple matching locations displayed for selection*
-
-### Weather Panel
-![Weather Panel](screenshots/weather-panel.png)
-*Current weather information displayed on map click*
-
-### Marker Placement
-![Marker](screenshots/marker-placement.png)
-*Red circular marker shows selected location*
 
 ## 🎓 Learning Outcomes
 
