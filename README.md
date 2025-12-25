@@ -17,16 +17,12 @@ An interactive web mapping application built with OpenLayers that provides geoco
 *Interactive map with search bar and OpenStreetMap tiles*
 
 ### Search Results
-![Search Results](screenshots/search-results.png)
+![Search Results](screenshots/searchresults.png)
 *Multiple matching locations displayed for selection*
 
 ### Weather Panel
 ![Weather Panel](screenshots/weather-panel.png)
 *Current weather information displayed on map click*
-
-### Marker Placement
-![Marker](screenshots/marker-placement.png)
-*Red circular marker shows selected location*
 
 ## 🌟 Features
 
