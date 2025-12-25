@@ -175,7 +175,18 @@ Calculating for 100,000 requests per month (~3,300/day):
    cd KNTU_WebGIS_Course_4041_A2
    ```
 
-2. **Open the project**
+2. **Configure API Keys**
+   ```bash
+   # Copy the example configuration file
+   copy config.example.js config.js
+   
+   # The config.js file is already set up for free APIs (no keys needed)
+   # If you want to use different APIs, edit config.js and add your keys
+   ```
+   
+   **Important:** `config.js` is excluded from Git via `.gitignore` to protect your API keys.
+
+3. **Open the project**
    - Simply open `index.html` in your web browser
    - Or use a local server for better performance:
      ```bash
@@ -189,7 +200,7 @@ Calculating for 100,000 requests per month (~3,300/day):
      npx http-server
      ```
 
-3. **Access the application**
+4. **Access the application**
    - Open your browser and navigate to `http://localhost:8000`
 
 ### No API Keys Needed!
@@ -197,6 +208,8 @@ Calculating for 100,000 requests per month (~3,300/day):
 This project uses free services that don't require API keys:
 - **Nominatim**: No key required (please respect rate limits)
 - **Open-Meteo**: No key required
+
+If you want to use APIs that require keys (Google Maps, OpenWeatherMap, etc.), simply edit `config.js` and add your keys there.
 
 ## 📖 Usage
 
@@ -231,6 +244,9 @@ KNTU_WebGIS_Course_4041_A2/
 ├── index.html          # Main HTML file with structure
 ├── style.css           # All styling and responsive design
 ├── script.js           # JavaScript with all functionality
+├── config.js           # API keys configuration (NOT in Git)
+├── config.example.js   # Example config file (safe to commit)
+├── .gitignore          # Excludes sensitive files from Git
 ├── README.md           # This file - project documentation
 └── INSTRUCTIONS.md     # Assignment instructions
 ```
